@@ -1,0 +1,111 @@
+---
+title: "Joins_Practice"
+author: "Julia Parish"
+date: "8/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(palmerpenguins)
+library(lubridate)
+
+```
+
+## **Part 1: Data wrangling refresher**
+Refresher 1: Starting with the penguins dataset in the palmerpenguins package, write a single piped sequence in which you:
+- Only include penguins at Biscoe and Dream islands
+- Remove the year and sex variables
+- Add a new column called body_mass_kg, with penguin mass converted from grams to kilograms
+- Rename the island variable to location
+
+```{r}
+bd_penguins <- penguins %>% 
+  filter(island %in% c("Biscoe", "Dream")) %>% 
+  select(-year, -sex) %>% 
+  mutate(body_mass_kg = body_mass_g / 1000) %>% 
+  rename(location = island)
+    
+```
+## **Refresher 2: Staring with the penguins dataset in the palmerpenguins package, write a single piped sequence in which you:**
+- Limit to only Adelie penguins
+- Remove any observations where flipper_length_mm is NA (hint: !is.na())
+- Group the data by sex
+- Find the mean (mean()), standard deviation (sd) and sample size (n) of flipper_length_mm for male and female Adelie penguins, returned in a nice summary table
+
+```{r}
+ex_2 <- penguins %>% 
+  filter(species == "Adelie") %>% 
+  drop_na(flipper_length_mm) %>% 
+  group_by(sex) %>% 
+  summarize(
+    mean_flip = mean(flipper_length_mm),
+    sd_flip = sd(flipper_length_mm),
+    sample_size = n()
+  )
+```
+
+## Joins Practice
+- Datapasta
+```{r}
+animals <- tibble::tribble(
+  ~location,   ~species,  ~maturity,
+   "lagoon",   "bobcat",    "adult",
+    "bluff",   "coyote", "juvenile",
+    "creek",      "fox",    "adult",
+     "oaks", "squirrel", "juvenile",
+    "bluff",   "bobcat",    "adult"
+  )
+
+sites <- tibble::tribble(
+           ~location,      ~full_site_name, ~jurisdiction,
+             "beach",       "Goleta Beach",     "SB City",
+            "lagoon",        "UCSB Lagoon",        "UCSB",
+             "bluff",       "Ellwood Mesa",     "SB City",
+              "oaks", "Fremont Campground",        "USFS",
+           )
+
+```
+
+## Full Join - keeps all data, create new column of data
+
+```{r}
+animals_full_join <- full_join(animals, sites)
+```
+
+## Left Join - keeps everything in 'x', 
+
+```{r}
+animals_left_join <- left_join(animals, sites, by = "location")
+```
+
+## Inner join - keeps the things that have a matching key in both x, y
+
+```{r}
+animals_inner_join <- inner_join(animals, sites, by = "location")
+```
+
+### Filtering Joins
+# Semi-joins - keeps all columns in x and keeps observations (rows) where the key has matching values in y
+
+```{r}
+animals_semi_join <- semi_join(animals, sites, by = "location")
+
+```
+
+# Anti-join - keeps observations in x if they do not have a matching value in y
+
+```{r}
+animals_anti_join <- anti_join(animals, sites, by = "location")
+
+animals_anti_join2 <- anti_join(sites, animals, by = "location")
+
+```
+
+# can join multiple datasets but typically want to do it in steps, and can join together different ways:
+*join_pipe <- animals %>% 
+  full_join(sites) %>% 
+  inner_join(animals_inner_join)*
+
